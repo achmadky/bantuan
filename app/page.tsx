@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MapPin, User, Briefcase, Plus, MessageCircle, Search, Filter } from "lucide-react"
+import { MapPin, User, Briefcase, Plus, MessageCircle, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 
 interface Offer {
@@ -56,6 +56,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [searchBantuan, setSearchBantuan] = useState("")
   const [searchCity, setSearchCity] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const offersPerPage = 5
 
   useEffect(() => {
     fetchOffers()
@@ -96,7 +98,17 @@ export default function HomePage() {
   const clearFilters = () => {
     setSearchBantuan("")
     setSearchCity("")
+    setCurrentPage(1)
   }
+  
+  // Get current offers for pagination
+  const indexOfLastOffer = currentPage * offersPerPage
+  const indexOfFirstOffer = indexOfLastOffer - offersPerPage
+  const currentOffers = filteredOffers.slice(indexOfFirstOffer, indexOfLastOffer)
+  
+  // Change page
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+  const totalPages = Math.ceil(filteredOffers.length / offersPerPage)
 
   if (loading) {
     return (
@@ -114,9 +126,12 @@ export default function HomePage() {
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Bantuin</h1>
-              <p className="text-gray-600 text-sm">Temukan bantuan yang Anda butuhkan</p>
+            <div className="flex items-center gap-4">
+              <img src="/bantuan-kita-logo.svg" alt="Bantuan-kita Logo" className="h-16 w-16" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Bantuan-kita</h1>
+                <p className="text-gray-600 text-sm">Temukan bantuan yang Anda butuhkan</p>
+              </div>
             </div>
             <Link href="/tawarkan-bantuan">
               <Button className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
@@ -171,7 +186,7 @@ export default function HomePage() {
 
           {/* Results count */}
           <div className="mt-3 text-sm text-gray-600">
-            Menampilkan {filteredOffers.length} dari {offers.length} bantuan
+            Menampilkan {Math.min(indexOfFirstOffer + 1, filteredOffers.length)}-{Math.min(indexOfLastOffer, filteredOffers.length)} dari {filteredOffers.length} bantuan (total {offers.length})
           </div>
         </div>
       </div>
@@ -192,7 +207,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredOffers.map((offer) => (
+            {currentOffers.map((offer) => (
               <Card key={offer.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3">
@@ -231,6 +246,50 @@ export default function HomePage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        )}
+        
+        {/* Pagination */}
+        {filteredOffers.length > offersPerPage && (
+          <div className="mt-8">
+            <nav className="flex justify-center">
+              <ul className="flex space-x-2">
+                {currentPage > 1 && (
+                  <li>
+                    <button
+                      onClick={() => paginate(currentPage - 1)}
+                      className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center gap-1"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      <span>Previous</span>
+                    </button>
+                  </li>
+                )}
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+                  <li key={number}>
+                    <button
+                      onClick={() => paginate(number)}
+                      className={`px-3 py-1 rounded ${currentPage === number ? 'bg-blue-600 text-white' : 'border border-gray-300 hover:bg-gray-50'}`}
+                    >
+                      {number}
+                    </button>
+                  </li>
+                ))}
+                
+                {currentPage < totalPages && (
+                  <li>
+                    <button
+                      onClick={() => paginate(currentPage + 1)}
+                      className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center gap-1"
+                    >
+                      <span>Next</span>
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </nav>
           </div>
         )}
       </main>
