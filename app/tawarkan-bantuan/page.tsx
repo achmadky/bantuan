@@ -80,9 +80,12 @@ export default function TawarkanBantuanPage() {
                 Kembali
               </Button>
             </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Tawarkan Bantuan</h1>
-              <p className="text-gray-600 mt-1">Bagikan keahlian Anda untuk membantu orang lain</p>
+            <div className="flex items-center gap-4">
+              <img src="/bantuan-kita-logo.svg" alt="Bantuan-kita Logo" className="h-12 w-12" />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Tawarkan Bantuan</h1>
+                <p className="text-gray-600 mt-1">Bagikan keahlian Anda untuk membantu orang lain</p>
+              </div>
             </div>
           </div>
         </div>

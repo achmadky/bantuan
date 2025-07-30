@@ -5,9 +5,13 @@ import { GeistMono } from "geist/font/mono"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Bantuin - Temukan Bantuan yang Anda Butuhkan",
+  title: "Bantuan-kita - Temukan Bantuan yang Anda Butuhkan",
   description: "Platform untuk menghubungkan orang yang membutuhkan bantuan dengan mereka yang bisa membantu",
   generator: "v0.dev",
+  icons: {
+    icon: "/bantuan-kita-logo.svg",
+    apple: "/bantuan-kita-logo.svg",
+  },
 }
 
 export default function RootLayout({
