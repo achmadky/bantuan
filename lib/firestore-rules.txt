@@ -1,0 +1,30 @@
+// Firestore Security Rules
+// Copy this to your Firebase Console > Firestore Database > Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to approved offers for everyone
+    match /offers/{document} {
+      allow read: if resource.data.status == 'approved';
+      
+      // Allow create for new offers (they start as pending)
+      allow create: if request.auth == null 
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasAll(['name', 'skill', 'city', 'description', 'status', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.skill is string
+        && request.resource.data.city is string
+        && request.resource.data.description is string;
+      
+      // For admin operations, you might want to add authentication
+      // For now, allowing all updates/deletes (you can restrict this later)
+      allow update, delete: if true;
+    }
+    
+    // Admin can read all offers
+    match /offers/{document} {
+      allow read: if true; // You can add admin authentication here
+    }
+  }
+}

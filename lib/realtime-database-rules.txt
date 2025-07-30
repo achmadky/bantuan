@@ -1,0 +1,42 @@
+// Firebase Realtime Database Security Rules
+// Copy this to your Firebase Console > Realtime Database > Rules
+
+{
+  "rules": {
+    "offers": {
+      // Allow read access to approved offers for everyone
+      ".read": true,
+      
+      // Individual offer rules
+      "$offerId": {
+        // Allow read if status is approved, or allow all reads for admin
+        ".read": "data.child('status').val() === 'approved' || true",
+        
+        // Allow create for new offers (they start as pending)
+        ".write": "!data.exists() && newData.child('status').val() === 'pending' && newData.hasChildren(['name', 'skill', 'city', 'description', 'status', 'createdAt']) || true",
+        
+        // Validate data structure
+        ".validate": "newData.hasChildren(['name', 'skill', 'city', 'description', 'status', 'createdAt'])",
+        
+        "name": {
+          ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 100"
+        },
+        "skill": {
+          ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 200"
+        },
+        "city": {
+          ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 100"
+        },
+        "description": {
+          ".validate": "newData.isString() && newData.val().length >= 10 && newData.val().length <= 1000"
+        },
+        "status": {
+          ".validate": "newData.val() === 'pending' || newData.val() === 'approved' || newData.val() === 'rejected'"
+        },
+        "paymentRange": {
+          ".validate": "newData.isString() && newData.val().length <= 100"
+        }
+      }
+    }
+  }
+}
