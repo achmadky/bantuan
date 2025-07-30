@@ -3,8 +3,20 @@ import { setTelegramWebhook, getTelegramWebhookInfo } from "@/lib/telegram"
 
 export async function POST(request: NextRequest) {
   try {
-    // Use the correct domain for your deployment
-    const webhookUrl = "https://v0-bantuin-app-requirements.vercel.app/api/telegram-webhook"
+    // Get webhook URL from request body or use default
+    let webhookUrl = "https://bantuan-kita.vercel.app/api/telegram-webhook"
+    
+    try {
+      const body = await request.json()
+      if (body.webhookUrl) {
+        webhookUrl = body.webhookUrl
+      }
+    } catch (e) {
+      // If no body or invalid JSON, use default URL
+      console.log("No webhook URL provided in request body, using default")
+    }
+    
+    console.log(`Setting webhook URL to: ${webhookUrl}`)
     const result = await setTelegramWebhook(webhookUrl)
 
     return NextResponse.json({
