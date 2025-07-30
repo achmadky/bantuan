@@ -1,5 +1,6 @@
 // Script to set Telegram webhook URL directly
 const https = require('https');
+require('dotenv').config(); // Load environment variables from .env file
 
 // Get command line arguments
 const args = process.argv.slice(2);
