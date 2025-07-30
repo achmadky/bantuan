@@ -76,13 +76,14 @@ export async function getApprovedOffers(): Promise<Offer[]> {
 
       // Sort by createdAt descending (newest first)
       offers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      return offers
     }
 
-    return offers.length > 0 ? offers : fallbackOffers.filter((offer) => offer.status === "approved")
+    // Return empty array if no data exists, don't use fallback
+    return []
   } catch (error) {
     console.error("Error getting approved offers:", error)
-    console.warn("Using fallback data due to database error")
-    return fallbackOffers.filter((offer) => offer.status === "approved")
+    return []
   }
 }
 
@@ -108,13 +109,14 @@ export async function getAllOffers(): Promise<Offer[]> {
 
       // Sort by createdAt descending (newest first)
       offers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      return offers
     }
 
-    return offers.length > 0 ? offers : fallbackOffers
+    // Return empty array if no data exists
+    return []
   } catch (error) {
     console.error("Error getting all offers:", error)
-    console.warn("Using fallback data due to database error")
-    return fallbackOffers
+    return []
   }
 }
 

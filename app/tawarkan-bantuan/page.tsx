@@ -79,7 +79,7 @@ export default function TawarkanBantuanPage() {
       if (response.ok) {
         setSubmitStatus({
           type: "success",
-          message: result.message || "Bantuan berhasil dikirim!",
+          message: "Bantuan berhasil dikirim! Admin akan meninjau dalam 24 jam. Anda akan diarahkan ke halaman utama.",
         })
 
         // Reset form
@@ -91,14 +91,14 @@ export default function TawarkanBantuanPage() {
           description: "",
         })
 
-        // Redirect after 3 seconds
+        // Redirect after 4 seconds
         setTimeout(() => {
           router.push("/")
-        }, 3000)
+        }, 4000)
       } else {
         setSubmitStatus({
           type: "error",
-          message: result.error || "Gagal mengirim bantuan",
+          message: result.error || "Gagal mengirim bantuan. Silakan coba lagi.",
           details: result.details,
         })
       }

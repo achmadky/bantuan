@@ -36,11 +36,6 @@ export default function HomePage() {
       setDatabaseError(false)
       const fetchedOffers = await getApprovedOffers()
       setOffers(fetchedOffers)
-
-      // Check if we're using fallback data
-      if (fetchedOffers.length > 0 && fetchedOffers[0].id.startsWith("sample-")) {
-        setDatabaseError(true)
-      }
     } catch (error) {
       console.error("Error fetching offers:", error)
       setDatabaseError(true)
@@ -55,11 +50,6 @@ export default function HomePage() {
       setDatabaseError(false)
       const fetchedOffers = await getApprovedOffers()
       setOffers(fetchedOffers)
-
-      // Check if we're using fallback data
-      if (fetchedOffers.length > 0 && fetchedOffers[0].id.startsWith("sample-")) {
-        setDatabaseError(true)
-      }
     } catch (error) {
       console.error("Error refreshing offers:", error)
       setDatabaseError(true)
@@ -161,14 +151,12 @@ export default function HomePage() {
 
       {/* Database Error Alert */}
       {databaseError && (
-        <div className="bg-yellow-50 border-b border-yellow-200">
+        <div className="bg-red-50 border-b border-red-200">
           <div className="max-w-4xl mx-auto px-4 py-3">
-            <Alert className="border-yellow-200 bg-yellow-50">
-              <AlertTriangle className="h-4 w-4 text-yellow-600" />
-              <AlertDescription className="text-yellow-800">
-                <strong>Mode Demo:</strong> Database Firebase belum terkonfigurasi. Menampilkan data contoh. Untuk
-                menggunakan database, pastikan Firebase Realtime Database sudah diaktifkan dan environment variables
-                sudah diatur.
+            <Alert className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                <strong>Database Error:</strong> Tidak dapat terhubung ke database. Silakan coba lagi nanti.
               </AlertDescription>
             </Alert>
           </div>
@@ -306,11 +294,6 @@ export default function HomePage() {
                       <div className="flex items-center gap-2 mb-2">
                         <User size={18} className="text-blue-600" />
                         <h3 className="font-semibold text-gray-900">{offer.name}</h3>
-                        {databaseError && (
-                          <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
-                            Demo
-                          </Badge>
-                        )}
                       </div>
 
                       <div className="flex items-center gap-2 mb-2">
