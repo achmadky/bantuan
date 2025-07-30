@@ -5,13 +5,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trash2, Eye, MapPin, DollarSign, User, Briefcase, RefreshCw } from "lucide-react"
+import { Trash2, Eye, MapPin, User, Briefcase, RefreshCw, Check, X } from "lucide-react"
 
 interface Offer {
   id: string
   name: string
   skill: string
   city: string
+  phoneNumber: string
   paymentRange?: string
   description: string
   status: "pending" | "approved" | "rejected"
@@ -22,6 +23,7 @@ export default function HiddenAdminPage() {
   const [offers, setOffers] = useState<Offer[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [processingOffers, setProcessingOffers] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchOffers()
@@ -50,6 +52,80 @@ export default function HiddenAdminPage() {
       console.error("Gagal refresh data bantuan:", error)
     } finally {
       setRefreshing(false)
+    }
+  }
+
+  const approveOffer = async (offerId: string) => {
+    if (processingOffers.has(offerId)) return
+
+    setProcessingOffers((prev) => new Set(prev).add(offerId))
+
+    try {
+      const response = await fetch("/api/admin/approve", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ offerId }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setOffers((prev) =>
+          prev.map((offer) => (offer.id === offerId ? { ...offer, status: "approved" as const } : offer)),
+        )
+        alert("Bantuan berhasil disetujui!")
+      } else {
+        alert(result.error || "Gagal menyetujui bantuan")
+      }
+    } catch (error) {
+      console.error("Error approving offer:", error)
+      alert("Gagal menyetujui bantuan")
+    } finally {
+      setProcessingOffers((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(offerId)
+        return newSet
+      })
+    }
+  }
+
+  const rejectOffer = async (offerId: string) => {
+    if (processingOffers.has(offerId)) return
+
+    if (!confirm("Apakah Anda yakin ingin menolak bantuan ini?")) return
+
+    setProcessingOffers((prev) => new Set(prev).add(offerId))
+
+    try {
+      const response = await fetch("/api/admin/reject", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ offerId }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setOffers((prev) =>
+          prev.map((offer) => (offer.id === offerId ? { ...offer, status: "rejected" as const } : offer)),
+        )
+        alert("Bantuan berhasil ditolak!")
+      } else {
+        alert(result.error || "Gagal menolak bantuan")
+      }
+    } catch (error) {
+      console.error("Error rejecting offer:", error)
+      alert("Gagal menolak bantuan")
+    } finally {
+      setProcessingOffers((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(offerId)
+        return newSet
+      })
     }
   }
 
@@ -112,6 +188,34 @@ export default function HiddenAdminPage() {
           </div>
           <div className="flex items-center gap-2">
             <Badge className={getStatusColor(offer.status)}>{getStatusText(offer.status)}</Badge>
+            {offer.status === "pending" && (
+              <>
+                <Button
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={() => approveOffer(offer.id)}
+                  disabled={processingOffers.has(offer.id)}
+                >
+                  {processingOffers.has(offer.id) ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                  ) : (
+                    <Check size={14} />
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => rejectOffer(offer.id)}
+                  disabled={processingOffers.has(offer.id)}
+                >
+                  {processingOffers.has(offer.id) ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                  ) : (
+                    <X size={14} />
+                  )}
+                </Button>
+              </>
+            )}
             <Button variant="destructive" size="sm" onClick={() => deleteOffer(offer.id)}>
               <Trash2 size={14} />
             </Button>
@@ -131,12 +235,9 @@ export default function HiddenAdminPage() {
             </div>
 
             {offer.paymentRange && (
-              <div className="flex items-center gap-1">
-                <DollarSign size={14} className="text-gray-500" />
-                <Badge variant="secondary" className="text-xs">
-                  {offer.paymentRange}
-                </Badge>
-              </div>
+              <Badge variant="secondary" className="text-xs">
+                {offer.paymentRange}
+              </Badge>
             )}
           </div>
         </div>
@@ -144,6 +245,8 @@ export default function HiddenAdminPage() {
         <p className="text-gray-700 text-sm leading-relaxed mb-3">{offer.description}</p>
 
         <div className="text-xs text-gray-500">
+          📱 {offer.phoneNumber}
+          <br />
           Dikirim {new Date(offer.createdAt).toLocaleDateString("id-ID")}
           <br />
           ID: {offer.id}

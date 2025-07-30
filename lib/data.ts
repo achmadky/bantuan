@@ -6,6 +6,7 @@ export interface Offer {
   name: string
   skill: string
   city: string
+  phoneNumber: string
   paymentRange?: string
   description: string
   status: "pending" | "approved" | "rejected"
@@ -14,48 +15,11 @@ export interface Offer {
 
 const OFFERS_PATH = "offers"
 
-// Fallback data when database is not available
-const fallbackOffers: Offer[] = [
-  {
-    id: "sample-1",
-    name: "Budi Santoso",
-    skill: "Pembuatan Website",
-    city: "Jakarta",
-    paymentRange: "IDR 150.000-300.000/jam",
-    description:
-      "Full-stack developer dengan pengalaman 5 tahun di React, Node.js, dan database. Bisa membantu membuat website, aplikasi web, dan pengembangan API.",
-    status: "approved",
-    createdAt: "2024-01-15T10:00:00Z",
-  },
-  {
-    id: "sample-2",
-    name: "Sari Dewi",
-    skill: "Desain Grafis",
-    city: "Bandung",
-    paymentRange: "IDR 100.000-250.000/jam",
-    description:
-      "Desainer grafis kreatif yang mengkhususkan diri dalam branding, desain logo, dan materi pemasaran digital. Mahir menggunakan Adobe Creative Suite.",
-    status: "approved",
-    createdAt: "2024-01-14T15:30:00Z",
-  },
-  {
-    id: "sample-3",
-    name: "Ahmad Rizki",
-    skill: "Les Privat Matematika",
-    city: "Surabaya",
-    paymentRange: "IDR 75.000-125.000/jam",
-    description:
-      "Guru matematika berpengalaman 8 tahun. Mengajar SD, SMP, dan SMA. Metode pembelajaran yang mudah dipahami dan menyenangkan.",
-    status: "approved",
-    createdAt: "2024-01-13T09:15:00Z",
-  },
-]
-
 export async function getApprovedOffers(): Promise<Offer[]> {
   try {
     if (!database) {
-      console.warn("Database not available, using fallback data")
-      return fallbackOffers.filter((offer) => offer.status === "approved")
+      console.warn("Database not available")
+      return []
     }
 
     const offersRef = ref(database, OFFERS_PATH)
@@ -74,12 +38,10 @@ export async function getApprovedOffers(): Promise<Offer[]> {
         }
       })
 
-      // Sort by createdAt descending (newest first)
       offers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       return offers
     }
 
-    // Return empty array if no data exists, don't use fallback
     return []
   } catch (error) {
     console.error("Error getting approved offers:", error)
@@ -90,8 +52,8 @@ export async function getApprovedOffers(): Promise<Offer[]> {
 export async function getAllOffers(): Promise<Offer[]> {
   try {
     if (!database) {
-      console.warn("Database not available, using fallback data")
-      return fallbackOffers
+      console.warn("Database not available")
+      return []
     }
 
     const offersRef = ref(database, OFFERS_PATH)
@@ -107,12 +69,10 @@ export async function getAllOffers(): Promise<Offer[]> {
         })
       })
 
-      // Sort by createdAt descending (newest first)
       offers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       return offers
     }
 
-    // Return empty array if no data exists
     return []
   } catch (error) {
     console.error("Error getting all offers:", error)
@@ -127,11 +87,11 @@ export async function addPendingOffer(offer: Omit<Offer, "id">): Promise<string 
       return null
     }
 
-    // Clean the data before saving
     const cleanOffer = {
       name: offer.name.trim(),
       skill: offer.skill.trim(),
       city: offer.city.trim(),
+      phoneNumber: offer.phoneNumber.trim(),
       paymentRange: offer.paymentRange?.trim() || null,
       description: offer.description.trim(),
       status: "pending" as const,
@@ -142,6 +102,7 @@ export async function addPendingOffer(offer: Omit<Offer, "id">): Promise<string 
     const newOfferRef = push(offersRef)
     await set(newOfferRef, cleanOffer)
 
+    console.log(`New offer added with ID: ${newOfferRef.key}`)
     return newOfferRef.key
   } catch (error) {
     console.error("Error adding offer:", error)
@@ -156,11 +117,35 @@ export async function approveOffer(id: string): Promise<boolean> {
       return false
     }
 
+    console.log(`Attempting to approve offer: ${id}`)
     const offerRef = ref(database, `${OFFERS_PATH}/${id}`)
+
+    // First check if offer exists
+    const snapshot = await get(offerRef)
+    if (!snapshot.exists()) {
+      console.error(`Offer ${id} does not exist`)
+      return false
+    }
+
+    const currentOffer = snapshot.val()
+    console.log(`Current offer status: ${currentOffer.status}`)
+
+    // Update the offer status to approved
     await update(offerRef, {
       status: "approved",
       approvedAt: new Date().toISOString(),
     })
+
+    console.log(`Offer ${id} approved successfully`)
+
+    // Verify the update
+    const updatedSnapshot = await get(offerRef)
+    if (updatedSnapshot.exists()) {
+      const updatedOffer = updatedSnapshot.val()
+      console.log(`Verified offer status after update: ${updatedOffer.status}`)
+      return updatedOffer.status === "approved"
+    }
+
     return true
   } catch (error) {
     console.error("Error approving offer:", error)
@@ -175,11 +160,35 @@ export async function rejectOffer(id: string): Promise<boolean> {
       return false
     }
 
+    console.log(`Attempting to reject offer: ${id}`)
     const offerRef = ref(database, `${OFFERS_PATH}/${id}`)
+
+    // First check if offer exists
+    const snapshot = await get(offerRef)
+    if (!snapshot.exists()) {
+      console.error(`Offer ${id} does not exist`)
+      return false
+    }
+
+    const currentOffer = snapshot.val()
+    console.log(`Current offer status: ${currentOffer.status}`)
+
+    // Update the offer status to rejected
     await update(offerRef, {
       status: "rejected",
       rejectedAt: new Date().toISOString(),
     })
+
+    console.log(`Offer ${id} rejected successfully`)
+
+    // Verify the update
+    const updatedSnapshot = await get(offerRef)
+    if (updatedSnapshot.exists()) {
+      const updatedOffer = updatedSnapshot.val()
+      console.log(`Verified offer status after update: ${updatedOffer.status}`)
+      return updatedOffer.status === "rejected"
+    }
+
     return true
   } catch (error) {
     console.error("Error rejecting offer:", error)
@@ -206,24 +215,28 @@ export async function deleteOffer(id: string): Promise<boolean> {
 export async function getOfferById(id: string): Promise<Offer | null> {
   try {
     if (!database) {
-      console.warn("Database not available, searching fallback data")
-      return fallbackOffers.find((offer) => offer.id === id) || null
+      console.warn("Database not available")
+      return null
     }
 
+    console.log(`Getting offer by ID: ${id}`)
     const offerRef = ref(database, `${OFFERS_PATH}/${id}`)
     const snapshot = await get(offerRef)
 
     if (snapshot.exists()) {
-      return {
+      const offer = {
         id: snapshot.key!,
         ...snapshot.val(),
       } as Offer
+      console.log(`Found offer: ${offer.name} - ${offer.skill} (Status: ${offer.status})`)
+      return offer
     } else {
+      console.log(`Offer ${id} not found`)
       return null
     }
   } catch (error) {
     console.error("Error getting offer by ID:", error)
-    return fallbackOffers.find((offer) => offer.id === id) || null
+    return null
   }
 }
 

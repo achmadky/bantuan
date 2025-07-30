@@ -1,59 +1,55 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { addPendingOffer } from "@/lib/data"
 import { sendTelegramNotification } from "@/lib/telegram"
-import { validateOffer } from "@/lib/validation"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const { name, skill, city, phoneNumber, paymentRange, description } = body
 
-    // Validate the input data
-    const validation = validateOffer(body)
-    if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: "Data tidak valid",
-          details: validation.errors,
-        },
-        { status: 400 },
-      )
+    // Validate required fields
+    if (!name || !skill || !city || !phoneNumber || !description) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    const { name, skill, city, paymentRange, description } = validation.data!
-
-    // Create new offer
-    const newOffer = {
+    // Create the offer
+    const offerId = await addPendingOffer({
       name,
       skill,
       city,
+      phoneNumber,
+      paymentRange,
+      description,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+    })
+
+    if (!offerId) {
+      return NextResponse.json({ error: "Failed to create offer" }, { status: 500 })
+    }
+
+    // Send Telegram notification
+    const offer = {
+      id: offerId,
+      name,
+      skill,
+      city,
+      phoneNumber,
       paymentRange,
       description,
       status: "pending" as const,
       createdAt: new Date().toISOString(),
     }
 
-    // Add to Firebase
-    const offerId = await addPendingOffer(newOffer)
-
-    if (!offerId) {
-      return NextResponse.json({ error: "Gagal menyimpan bantuan" }, { status: 500 })
-    }
-
-    // Send Telegram notification with the Firebase document ID
-    try {
-      await sendTelegramNotification({ ...newOffer, id: offerId })
-    } catch (telegramError) {
-      console.error("Telegram notification failed:", telegramError)
-      // Don't fail the request if Telegram fails
-    }
+    await sendTelegramNotification(offer)
 
     return NextResponse.json({
       success: true,
-      id: offerId,
-      message: "Bantuan berhasil dikirim untuk ditinjau",
+      message: "Penawaran bantuan berhasil dikirim dan menunggu persetujuan admin",
+      offerId,
     })
   } catch (error) {
     console.error("Error submitting offer:", error)
-    return NextResponse.json({ error: "Terjadi kesalahan server" }, { status: 500 })
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
