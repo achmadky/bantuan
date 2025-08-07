@@ -52,20 +52,6 @@ Bantuan Kita is a platform that connects people who need help with those who can
 - Receive real-time notifications via Telegram when new offers are submitted
 - Respond to offers directly from Telegram
 
-## Project Structure
-
-- `/app`: Next.js App Router pages and API routes
-  - `/api`: Backend API endpoints
-  - `/tawarkan-bantuan`: Form for submitting offers
-- `/components`: Reusable UI components
-  - `/ui`: Shadcn UI components
-- `/lib`: Utility functions and services
-  - `data.ts`: Database operations
-  - `firebase.ts`: Firebase configuration
-  - `telegram.ts`: Telegram bot integration
-- `/public`: Static assets
-- `/scripts`: Utility scripts for deployment and configuration
-
 ## Getting Started
 
 ### Prerequisites
@@ -123,6 +109,3 @@ The application is configured for easy deployment on Vercel:
 3. Configure the environment variables
 4. Deploy
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
