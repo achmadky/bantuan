@@ -56,7 +56,6 @@ Bantuan Kita is a platform that connects people who need help with those who can
 
 - `/app`: Next.js App Router pages and API routes
   - `/api`: Backend API endpoints
-  - `/hidden`: Admin panel interface
   - `/tawarkan-bantuan`: Form for submitting offers
 - `/components`: Reusable UI components
   - `/ui`: Shadcn UI components
