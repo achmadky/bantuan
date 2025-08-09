@@ -9,7 +9,7 @@ import { MapPin, User, Briefcase, Plus, MessageCircle, Search, Filter, ChevronLe
 import Link from "next/link"
 
 interface Offer {
-  id: string
+  // id: string - Remove this since we won't receive IDs from the API anymore
   name: string
   skill: string
   city: string
@@ -248,7 +248,7 @@ export default function HomePage() {
         ) : (
           <div className="space-y-4">
             {offers.map((offer) => (
-              <Card key={offer.id} className="hover:shadow-md transition-shadow">
+              <Card className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-2">
@@ -271,7 +271,7 @@ export default function HomePage() {
 
                       {offer.paymentRange && (
                         <Badge variant="secondary" className="text-xs">
-                          RP {(offer.paymentRange)}
+                          Rp {(offer.paymentRange)}
                         </Badge>
                       )}
                     </div>
