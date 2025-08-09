@@ -37,7 +37,7 @@ function formatPhoneNumber(phoneNumber: string): string {
 function WhatsAppButton({ name, skill, phoneNumber }: { name: string; skill: string; phoneNumber: string }) {
   const handleWhatsAppClick = () => {
     const formattedPhone = formatPhoneNumber(phoneNumber)
-    const message = `Halo ${name}, saya tertarik dengan layanan ${skill} yang Anda tawarkan di Bantuin. Bisakah kita diskusi lebih lanjut?`
+    const message = `Halo ${name}, saya tertarik dengan layanan ${skill} yang Anda tawarkan di Bantuan-Kita. Bisakah kita diskusi lebih lanjut?`
     const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
@@ -231,6 +231,7 @@ export default function HomePage() {
 
                       {offer.paymentRange && (
                         <Badge variant="secondary" className="text-xs">
+                          Rp
                           {offer.paymentRange}
                         </Badge>
                       )}
