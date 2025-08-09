@@ -271,7 +271,7 @@ export default function HomePage() {
 
                       {offer.paymentRange && (
                         <Badge variant="secondary" className="text-xs">
-                          {(offer.paymentRange)}
+                          RP {(offer.paymentRange)}
                         </Badge>
                       )}
                     </div>
