@@ -20,6 +20,18 @@ interface Offer {
   createdAt: string
 }
 
+interface PaginatedResponse {
+  data: Offer[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+}
+
 function formatPhoneNumber(phoneNumber: string): string {
   const cleaned = phoneNumber.replace(/\D/g, "")
 
@@ -52,63 +64,80 @@ function WhatsAppButton({ name, skill, phoneNumber }: { name: string; skill: str
 
 export default function HomePage() {
   const [offers, setOffers] = useState<Offer[]>([])
-  const [filteredOffers, setFilteredOffers] = useState<Offer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchBantuan, setSearchBantuan] = useState("")
   const [searchCity, setSearchCity] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
-  const offersPerPage = 5
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 5,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false
+  })
+  const [searchLoading, setSearchLoading] = useState(false)
+
+  // Debounce search to avoid too many API calls
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    fetchOffers()
+    fetchOffers(1, searchBantuan, searchCity)
   }, [])
 
+  // Handle search with debounce
   useEffect(() => {
-    filterOffers()
-  }, [offers, searchBantuan, searchCity])
+    if (searchTimeout) {
+      clearTimeout(searchTimeout)
+    }
 
-  const fetchOffers = async () => {
+    const timeout = setTimeout(() => {
+      setCurrentPage(1)
+      fetchOffers(1, searchBantuan, searchCity)
+    }, 500) // 500ms debounce
+
+    setSearchTimeout(timeout)
+
+    return () => {
+      if (timeout) clearTimeout(timeout)
+    }
+  }, [searchBantuan, searchCity])
+
+  const fetchOffers = async (page: number = 1, skill?: string, city?: string) => {
     try {
-      const response = await fetch("/api/offers")
-      const data = await response.json()
-      setOffers(data)
+      setSearchLoading(true)
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '5'
+      })
+
+      if (skill) params.append('skill', skill)
+      if (city) params.append('city', city)
+
+      const response = await fetch(`/api/offers?${params.toString()}`)
+      const data: PaginatedResponse = await response.json()
+      
+      setOffers(data.data)
+      setPagination(data.pagination)
+      setCurrentPage(page)
     } catch (error) {
       console.error("Gagal mengambil data bantuan:", error)
     } finally {
       setLoading(false)
+      setSearchLoading(false)
     }
-  }
-
-  const filterOffers = () => {
-    let filtered = offers
-
-    // Filter by bantuan (skill)
-    if (searchBantuan) {
-      filtered = filtered.filter((offer) => offer.skill.toLowerCase().includes(searchBantuan.toLowerCase()))
-    }
-
-    // Filter by city
-    if (searchCity) {
-      filtered = filtered.filter((offer) => offer.city.toLowerCase().includes(searchCity.toLowerCase()))
-    }
-
-    setFilteredOffers(filtered)
   }
 
   const clearFilters = () => {
     setSearchBantuan("")
     setSearchCity("")
     setCurrentPage(1)
+    fetchOffers(1)
   }
-  
-  // Get current offers for pagination
-  const indexOfLastOffer = currentPage * offersPerPage
-  const indexOfFirstOffer = indexOfLastOffer - offersPerPage
-  const currentOffers = filteredOffers.slice(indexOfFirstOffer, indexOfLastOffer)
-  
-  // Change page
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
-  const totalPages = Math.ceil(filteredOffers.length / offersPerPage)
+
+  const handlePageChange = (page: number) => {
+    fetchOffers(page, searchBantuan, searchCity)
+  }
 
   if (loading) {
     return (
@@ -161,6 +190,7 @@ export default function HomePage() {
                   value={searchBantuan}
                   onChange={(e) => setSearchBantuan(e.target.value)}
                   className="pl-10"
+                  disabled={searchLoading}
                 />
               </div>
 
@@ -172,12 +202,13 @@ export default function HomePage() {
                   value={searchCity}
                   onChange={(e) => setSearchCity(e.target.value)}
                   className="pl-10"
+                  disabled={searchLoading}
                 />
               </div>
 
               {/* Clear Filters */}
               {(searchBantuan || searchCity) && (
-                <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap bg-transparent">
+                <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap bg-transparent" disabled={searchLoading}>
                   Reset Filter
                 </Button>
               )}
@@ -186,16 +217,25 @@ export default function HomePage() {
 
           {/* Results count */}
           <div className="mt-3 text-sm text-gray-600">
-            Menampilkan {Math.min(indexOfFirstOffer + 1, filteredOffers.length)}-{Math.min(indexOfLastOffer, filteredOffers.length)} dari {filteredOffers.length} bantuan (total {offers.length})
+            {searchLoading ? (
+              <span className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                Mencari...
+              </span>
+            ) : (
+              <>
+                Menampilkan {((pagination.page - 1) * pagination.limit) + 1}-{Math.min(pagination.page * pagination.limit, pagination.total)} dari {pagination.total} bantuan
+              </>
+            )}
           </div>
         </div>
       </div>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
-        {filteredOffers.length === 0 ? (
+        {offers.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">
-              {offers.length === 0
+              {pagination.total === 0
                 ? "Belum ada bantuan yang tersedia"
                 : "Tidak ada bantuan yang sesuai dengan filter Anda"}
             </p>
@@ -207,7 +247,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {currentOffers.map((offer) => (
+            {offers.map((offer) => (
               <Card key={offer.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3">
@@ -231,8 +271,7 @@ export default function HomePage() {
 
                       {offer.paymentRange && (
                         <Badge variant="secondary" className="text-xs">
-                          Rp
-                          {offer.paymentRange}
+                          {(offer.paymentRange)}
                         </Badge>
                       )}
                     </div>
@@ -251,15 +290,16 @@ export default function HomePage() {
         )}
         
         {/* Pagination */}
-        {filteredOffers.length > offersPerPage && (
+        {pagination.totalPages > 1 && (
           <div className="mt-8">
             <nav className="flex justify-center">
               <ul className="flex space-x-2">
-                {currentPage > 1 && (
+                {pagination.hasPrev && (
                   <li>
                     <button
-                      onClick={() => paginate(currentPage - 1)}
+                      onClick={() => handlePageChange(currentPage - 1)}
                       className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center gap-1"
+                      disabled={searchLoading}
                     >
                       <ChevronLeft className="h-4 w-4" />
                       <span>Previous</span>
@@ -267,22 +307,24 @@ export default function HomePage() {
                   </li>
                 )}
                 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((number) => (
                   <li key={number}>
                     <button
-                      onClick={() => paginate(number)}
+                      onClick={() => handlePageChange(number)}
                       className={`px-3 py-1 rounded ${currentPage === number ? 'bg-blue-600 text-white' : 'border border-gray-300 hover:bg-gray-50'}`}
+                      disabled={searchLoading}
                     >
                       {number}
                     </button>
                   </li>
                 ))}
                 
-                {currentPage < totalPages && (
+                {pagination.hasNext && (
                   <li>
                     <button
-                      onClick={() => paginate(currentPage + 1)}
+                      onClick={() => handlePageChange(currentPage + 1)}
                       className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center gap-1"
+                      disabled={searchLoading}
                     >
                       <span>Next</span>
                       <ChevronRight className="h-4 w-4" />
