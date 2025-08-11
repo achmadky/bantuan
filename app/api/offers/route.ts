@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     const result = await getApprovedOffersPaginated(page, limit, Object.keys(filters).length > 0 ? filters : undefined)
     
-    // Remove offer IDs from public response for security
+    // Remove offer IDs from public response for security reasons
     const sanitizedResult = {
       ...result,
       data: sanitizeOffersForPublic(result.data)
