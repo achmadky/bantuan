@@ -3,7 +3,10 @@ name: Trigger Playwright Tests
 on:
   push:
     branches:
-      - main  # or your preferred branch
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   trigger:
