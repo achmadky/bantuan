@@ -18,3 +18,8 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           repository: achmadky/bantuan-pw
           event-type: trigger-playwright
+          client-payload: |
+            {
+              "sha": "${{ github.sha }}",
+              "branch": "${{ github.ref_name }}"
+            }
