@@ -284,3 +284,149 @@ export async function getTelegramWebhookInfo() {
     throw error
   }
 }
+
+interface RemovalRequest {
+  id: string
+  name: string
+  phoneNumber: string
+  reason: string
+  requestedAt: string
+  status: "pending" | "approved" | "rejected"
+}
+
+export async function sendRemovalRequestNotification(request: RemovalRequest) {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_ADMIN_CHAT_ID) {
+    console.warn("Telegram credentials not configured")
+    return
+  }
+
+  const message = `🗑️ *REMOVAL REQUEST*\n\n` +
+    `👤 *Name:* ${request.name}\n` +
+    `📱 *Phone:* ${request.phoneNumber}\n` +
+    `📝 *Reason:* ${request.reason}\n` +
+    `🕐 *Requested:* ${new Date(request.requestedAt).toLocaleString('id-ID')}\n\n` +
+    `Please review and take action:`
+
+  const keyboard = {
+    inline_keyboard: [
+      [
+        {
+          text: "✅ Approve",
+          callback_data: `removal_approve_${request.id}`
+        },
+        {
+          text: "❌ Reject",
+          callback_data: `removal_reject_${request.id}`
+        }
+      ]
+    ]
+  }
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_ADMIN_CHAT_ID,
+        text: message,
+        parse_mode: 'Markdown',
+        reply_markup: keyboard
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Failed to send removal request notification:', errorText)
+    } else {
+      console.log('Removal request notification sent successfully')
+    }
+  } catch (error) {
+    console.error('Error sending removal request notification:', error)
+  }
+}
+
+// Update the existing handleTelegramCallback function to handle removal requests
+export async function handleTelegramCallback(callbackQuery: any) {
+  const { data: callbackData } = callbackQuery
+  console.log(`Received callback: ${callbackData}`)
+
+  // Handle removal request callbacks
+  if (callbackData.startsWith('removal_')) {
+    const [, action, requestId] = callbackData.split('_')
+    
+    if (!requestId) {
+      console.error('Invalid removal callback data:', callbackData)
+      await answerCallbackQuery(callbackQuery.id, 'Invalid request ID')
+      return
+    }
+
+    console.log(`Processing removal ${action} for request ${requestId}`)
+
+    // Get removal request details
+    // Import here to avoid circular dependency
+    const { getRemovalRequestById } = await import("./data")
+    const request = await getRemovalRequestById(requestId)
+    if (!request) {
+      console.error(`Removal request ${requestId} not found`)
+      await answerCallbackQuery(callbackQuery.id, 'Request not found')
+      return
+    }
+
+    console.log(`Found removal request: ${request.name} - ${request.phoneNumber} (Status: ${request.status})`)
+
+    if (request.status !== "pending") {
+      console.log(`Removal request ${requestId} is not pending (current status: ${request.status})`)
+      await answerCallbackQuery(callbackQuery.id, `Request already ${request.status}`)
+      return
+    }
+
+    let success = false
+    let statusText = ""
+    let actionText = ""
+
+    if (action === "approve") {
+      console.log(`Attempting to approve removal request ${requestId}`)
+      const { approveRemovalRequest } = await import("./data")
+      success = await approveRemovalRequest(requestId)
+      statusText = "APPROVED & USER DELETED"
+      actionText = "approved and user data deleted"
+    } else if (action === "reject") {
+      console.log(`Attempting to reject removal request ${requestId}`)
+      const { rejectRemovalRequest } = await import("./data")
+      success = await rejectRemovalRequest(requestId)
+      statusText = "REJECTED"
+      actionText = "rejected"
+    }
+
+    if (success) {
+      console.log(`Removal request ${requestId} ${actionText} successfully`)
+      
+      // Update the message
+      const updatedMessage = `🗑️ *REMOVAL REQUEST - ${statusText}*\n\n` +
+        `👤 *Name:* ${request.name}\n` +
+        `📱 *Phone:* ${request.phoneNumber}\n` +
+        `📝 *Reason:* ${request.reason}\n` +
+        `🕐 *Requested:* ${new Date(request.requestedAt).toLocaleString('id-ID')}\n` +
+        `✅ *Processed:* ${new Date().toLocaleString('id-ID')}\n\n` +
+        `*Status:* ${statusText}`
+
+      await editMessageText(callbackQuery.message.chat.id, callbackQuery.message.message_id, updatedMessage, null)
+      await answerCallbackQuery(callbackQuery.id, `Removal request ${actionText}!`)
+      
+      // Invalidate cache if user was deleted
+      if (action === "approve") {
+        // Import the cache invalidation function
+
+      }
+    } else {
+      console.error(`Failed to ${action} removal request ${requestId}`)
+      await answerCallbackQuery(callbackQuery.id, `Failed to ${action} request`)
+    }
+    
+    return
+  }
+
+  // ... existing offer callback handling code ...
+}

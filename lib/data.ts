@@ -363,3 +363,206 @@ export async function getApprovedOffersPaginated(
     }
   }
 }
+
+
+export interface RemovalRequest {
+  id: string
+  userId: string
+  name: string
+  phoneNumber: string
+  reason: string
+  status: "pending" | "approved" | "rejected"
+  requestedAt: string
+  processedAt?: string
+}
+
+const REMOVAL_REQUESTS_PATH = "removal_requests"
+
+// Check if user exists by name and phone number
+export async function findUserByNameAndPhone(name: string, phoneNumber: string): Promise<Offer | null> {
+  try {
+    if (!database) {
+      console.warn("Database not available")
+      return null
+    }
+
+    const offersRef = ref(database, OFFERS_PATH)
+    const snapshot = await get(offersRef)
+    
+    if (snapshot.exists()) {
+      const data = snapshot.val()
+      for (const [key, offer] of Object.entries(data)) {
+        const offerData = offer as any
+        if (offerData.name.toLowerCase().trim() === name.toLowerCase().trim() && 
+            offerData.phoneNumber.trim() === phoneNumber.trim()) {
+          return {
+            id: key,
+            ...offerData,
+          } as Offer
+        }
+      }
+    }
+    
+    return null
+  } catch (error) {
+    console.error("Error finding user:", error)
+    return null
+  }
+}
+
+// Check if user has pending removal request
+export async function hasPendingRemovalRequest(userId: string): Promise<boolean> {
+  try {
+    if (!database) {
+      console.warn("Database not available")
+      return false
+    }
+
+    const requestsRef = ref(database, REMOVAL_REQUESTS_PATH)
+    const snapshot = await get(requestsRef)
+    
+    if (snapshot.exists()) {
+      const data = snapshot.val()
+      for (const request of Object.values(data)) {
+        const requestData = request as any
+        if (requestData.userId === userId && requestData.status === "pending") {
+          return true
+        }
+      }
+    }
+    
+    return false
+  } catch (error) {
+    console.error("Error checking pending removal request:", error)
+    return false
+  }
+}
+
+// Add removal request
+export async function addRemovalRequest(request: Omit<RemovalRequest, "id">): Promise<string | null> {
+  try {
+    if (!database) {
+      console.error("Database not available, cannot add removal request")
+      return null
+    }
+
+    const cleanRequest = {
+      userId: request.userId.trim(),
+      name: request.name.trim(),
+      phoneNumber: request.phoneNumber.trim(),
+      reason: request.reason.trim(),
+      status: "pending" as const,
+      requestedAt: new Date().toISOString(),
+    }
+
+    const requestsRef = ref(database, REMOVAL_REQUESTS_PATH)
+    const newRequestRef = push(requestsRef)
+    await set(newRequestRef, cleanRequest)
+    
+    console.log("Removal request added successfully:", newRequestRef.key)
+    return newRequestRef.key
+  } catch (error) {
+    console.error("Error adding removal request:", error)
+    return null
+  }
+}
+
+// Get removal request by ID
+export async function getRemovalRequestById(id: string): Promise<RemovalRequest | null> {
+  try {
+    if (!database) {
+      console.warn("Database not available")
+      return null
+    }
+
+    const requestRef = ref(database, `${REMOVAL_REQUESTS_PATH}/${id}`)
+    const snapshot = await get(requestRef)
+
+    if (snapshot.exists()) {
+      return {
+        id: snapshot.key!,
+        ...snapshot.val(),
+      } as RemovalRequest
+    }
+    
+    return null
+  } catch (error) {
+    console.error("Error getting removal request:", error)
+    return null
+  }
+}
+
+// Approve removal request (delete user and update request)
+export async function approveRemovalRequest(requestId: string): Promise<boolean> {
+  try {
+    if (!database) {
+      console.error("Database not available")
+      return false
+    }
+
+    // Get the removal request
+    const request = await getRemovalRequestById(requestId)
+    if (!request) {
+      console.error("Removal request not found")
+      return false
+    }
+
+    if (request.status !== "pending") {
+      console.error("Removal request is not pending")
+      return false
+    }
+
+    // Delete the user's offer
+    const success = await deleteOffer(request.userId)
+    if (!success) {
+      console.error("Failed to delete user offer")
+      return false
+    }
+
+    // Update removal request status
+    const requestRef = ref(database, `${REMOVAL_REQUESTS_PATH}/${requestId}`)
+    await update(requestRef, {
+      status: "approved",
+      processedAt: new Date().toISOString(),
+    })
+
+    console.log(`Removal request ${requestId} approved and user ${request.userId} deleted`)
+    return true
+  } catch (error) {
+    console.error("Error approving removal request:", error)
+    return false
+  }
+}
+
+// Reject removal request
+export async function rejectRemovalRequest(requestId: string): Promise<boolean> {
+  try {
+    if (!database) {
+      console.error("Database not available")
+      return false
+    }
+
+    const request = await getRemovalRequestById(requestId)
+    if (!request) {
+      console.error("Removal request not found")
+      return false
+    }
+
+    if (request.status !== "pending") {
+      console.error("Removal request is not pending")
+      return false
+    }
+
+    const requestRef = ref(database, `${REMOVAL_REQUESTS_PATH}/${requestId}`)
+    await update(requestRef, {
+      status: "rejected",
+      processedAt: new Date().toISOString(),
+    })
+
+    console.log(`Removal request ${requestId} rejected`)
+    return true
+  } catch (error) {
+    console.error("Error rejecting removal request:", error)
+    return false
+  }
+}

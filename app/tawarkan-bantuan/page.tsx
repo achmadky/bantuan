@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Send } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { RemovalRequestModal } from "@/components/removal-request-modal"
 
 export default function TawarkanBantuanPage() {
   const router = useRouter()
@@ -73,19 +74,30 @@ export default function TawarkanBantuanPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-6">
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="mr-4">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Kembali
-              </Button>
-            </Link>
-            <div className="flex items-center gap-4">
-              <img src="/bantuan-kita-logo.svg" alt="Bantuan-kita Logo" className="h-12 w-12" />
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Tawarkan Bantuan</h1>
-                <p className="text-gray-600 mt-1">Bagikan keahlian Anda untuk membantu orang lain</p>
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center">
+              <Link href="/">
+                <Button variant="ghost" size="sm" className="mr-4">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Kembali
+                </Button>
+              </Link>
+              <div className="flex items-center gap-4">
+                <img src="/bantuan-kita-logo.svg" alt="Bantuan-kita Logo" className="h-12 w-12" />
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Tawarkan Bantuan</h1>
+                  <p className="text-gray-600 mt-1">Bagikan keahlian Anda untuk membantu orang lain</p>
+                </div>
               </div>
+            </div>
+            <div className="flex items-center">
+              <RemovalRequestModal
+                trigger={
+                  <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
+                    Hapus Akun
+                  </Button>
+                }
+              />
             </div>
           </div>
         </div>
