@@ -103,7 +103,7 @@ Mohon berikan detail Anda untuk meminta penghapusan akun. Tindakan ini memerluka
             <Label htmlFor="reason">Alasan Permohonan</Label>
             <Select onValueChange={(value) => setFormData(prev => ({ ...prev, reason: value }))}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a reason" />
+                <SelectValue placeholder="Pilih alasan" />
               </SelectTrigger>
               <SelectContent>
                 {predefinedReasons.map((reason) => (
@@ -113,10 +113,10 @@ Mohon berikan detail Anda untuk meminta penghapusan akun. Tindakan ini memerluka
                 ))}
               </SelectContent>
             </Select>
-            {formData.reason === "Other" && (
+            {formData.reason === "Lainnya" && (
               <Textarea
                 placeholder="Please specify your reason"
-                value={formData.reason === "Other" ? "" : formData.reason}
+                value={formData.reason === "Lainnya" ? "" : formData.reason}
                 onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
                 className="mt-2"
               />
@@ -124,10 +124,10 @@ Mohon berikan detail Anda untuk meminta penghapusan akun. Tindakan ini memerluka
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Batalkan
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Submitting..." : "Submit Request"}
+              {loading ? "Mengirim..." : "Kirim Permohonan"}
             </Button>
           </DialogFooter>
         </form>
