@@ -3,7 +3,10 @@ name: Trigger Playwright Tests
 on:
   push:
     branches:
-      - main  # or your preferred branch
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   trigger:
@@ -15,3 +18,9 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           repository: achmadky/bantuan-pw
           event-type: trigger-playwright
+          client-payload: |
+            {
+              "sha": "${{ github.sha }}",
+              "branch": "${{ github.ref_name }}",
+              "pull_request_number": "${{ github.event.pull_request.number }}"
+            }
