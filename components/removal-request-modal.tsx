@@ -16,6 +16,7 @@ interface RemovalRequestModalProps {
 export function RemovalRequestModal({ trigger }: RemovalRequestModalProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [customReason, setCustomReason] = useState("")
   const [formData, setFormData] = useState({
     name: "",
     phoneNumber: "",
@@ -33,7 +34,10 @@ export function RemovalRequestModal({ trigger }: RemovalRequestModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.name || !formData.phoneNumber || !formData.reason) {
+    // Use custom reason if "Lainnya" is selected
+    const finalReason = formData.reason === "Lainnya" ? customReason : formData.reason
+    
+    if (!formData.name || !formData.phoneNumber || !finalReason) {
       toast.error("Please fill in all fields")
       return
     }
@@ -46,7 +50,10 @@ export function RemovalRequestModal({ trigger }: RemovalRequestModalProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          reason: finalReason
+        }),
       })
 
       const result = await response.json()
@@ -54,6 +61,7 @@ export function RemovalRequestModal({ trigger }: RemovalRequestModalProps) {
       if (response.ok) {
         toast.success(result.message)
         setFormData({ name: "", phoneNumber: "", reason: "" })
+        setCustomReason("")
         setOpen(false)
       } else {
         toast.error(result.error || "Failed to submit removal request")
@@ -75,7 +83,8 @@ export function RemovalRequestModal({ trigger }: RemovalRequestModalProps) {
         <DialogHeader>
           <DialogTitle>Permohonan Hapus Akun</DialogTitle>
           <DialogDescription>
-Mohon berikan detail Anda untuk meminta penghapusan akun. Tindakan ini memerlukan persetujuan admin.          </DialogDescription>
+            Mohon berikan detail Anda untuk meminta penghapusan akun. Tindakan ini memerlukan persetujuan admin.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -101,7 +110,12 @@ Mohon berikan detail Anda untuk meminta penghapusan akun. Tindakan ini memerluka
           </div>
           <div className="space-y-2">
             <Label htmlFor="reason">Alasan Permohonan</Label>
-            <Select onValueChange={(value) => setFormData(prev => ({ ...prev, reason: value }))}>
+            <Select onValueChange={(value) => {
+              setFormData(prev => ({ ...prev, reason: value }))
+              if (value !== "Lainnya") {
+                setCustomReason("")
+              }
+            }}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih alasan" />
               </SelectTrigger>
@@ -116,9 +130,10 @@ Mohon berikan detail Anda untuk meminta penghapusan akun. Tindakan ini memerluka
             {formData.reason === "Lainnya" && (
               <Textarea
                 placeholder="Please specify your reason"
-                value={formData.reason === "Lainnya" ? "" : formData.reason}
-                onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+                value={customReason}
+                onChange={(e) => setCustomReason(e.target.value)}
                 className="mt-2"
+                required
               />
             )}
           </div>

@@ -87,6 +87,14 @@ export async function handleTelegramUpdate(update: any) {
   console.log(`Processing callback data: ${data}`)
   console.log(`Message ID: ${messageId}, Chat ID: ${chatId}`)
 
+  // Handle removal request callbacks
+  if (data && data.startsWith("removal_")) {
+    console.log("Handling removal request callback")
+    await handleTelegramCallback(callbackQuery)
+    return
+  }
+
+  // Handle offer callbacks
   if (!data || (!data.startsWith("approve_") && !data.startsWith("reject_"))) {
     console.log(`Invalid callback data: ${data}`)
     await answerCallbackQuery(callbackQuery.id, "Invalid action")
