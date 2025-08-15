@@ -38,7 +38,7 @@ export function RemovalRequestModal({ trigger }: RemovalRequestModalProps) {
     const finalReason = formData.reason === "Lainnya" ? customReason : formData.reason
     
     if (!formData.name || !formData.phoneNumber || !finalReason) {
-      toast.error("Please fill in all fields")
+      toast.error("Mohon lengkapi semua field yang diperlukan")
       return
     }
 
@@ -59,16 +59,38 @@ export function RemovalRequestModal({ trigger }: RemovalRequestModalProps) {
       const result = await response.json()
 
       if (response.ok) {
-        toast.success(result.message)
+        // Success popup
+        toast.success("✅ Permohonan penghapusan akun berhasil dikirim! Menunggu persetujuan admin.", {
+          duration: 5000,
+        })
         setFormData({ name: "", phoneNumber: "", reason: "" })
         setCustomReason("")
         setOpen(false)
       } else {
-        toast.error(result.error || "Failed to submit removal request")
+        // Handle different error scenarios with specific messages
+        if (response.status === 404) {
+          toast.error("❌ Data tidak ditemukan", {
+            description: "Tidak ada akun yang cocok dengan nama dan nomor WhatsApp yang Anda masukkan."
+          })
+        } else if (response.status === 400 && result.error === "You already have a pending removal request") {
+          toast.error("⚠️ Permohonan sudah ada", {
+            description: "Anda sudah memiliki permohonan penghapusan yang sedang diproses. Mohon tunggu konfirmasi admin."
+          })
+        } else if (response.status === 400) {
+          toast.error("❌ Data tidak lengkap", {
+            description: "Mohon pastikan semua field telah diisi dengan benar."
+          })
+        } else {
+          toast.error("❌ Gagal mengirim permohonan", {
+            description: result.error || "Terjadi kesalahan sistem. Silakan coba lagi nanti."
+          })
+        }
       }
     } catch (error) {
       console.error('Error submitting removal request:', error)
-      toast.error("An error occurred while submitting your request")
+      toast.error("❌ Koneksi bermasalah", {
+        description: "Tidak dapat terhubung ke server. Periksa koneksi internet Anda dan coba lagi."
+      })
     } finally {
       setLoading(false)
     }
