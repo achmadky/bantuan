@@ -75,29 +75,30 @@ export async function handleTelegramUpdate(update: any) {
   console.log("Update object:", JSON.stringify(update, null, 2))
 
   if (!update.callback_query) {
-    console.log("No callback_query found in update")
+    console.log("❌ No callback_query found in update")
     return
   }
 
   const callbackQuery = update.callback_query
   const data = callbackQuery.data
-  const messageId = callbackQuery.message.message_id
-  const chatId = callbackQuery.message.chat.id
+  const messageId = callbackQuery.message?.message_id
+  const chatId = callbackQuery.message?.chat?.id
 
-  console.log(`Processing callback data: ${data}`)
-  console.log(`Message ID: ${messageId}, Chat ID: ${chatId}`)
+  console.log(`📋 Processing callback data: ${data}`)
+  console.log(`📧 Message ID: ${messageId}, Chat ID: ${chatId}`)
+  console.log(`👤 User: ${callbackQuery.from?.first_name} ${callbackQuery.from?.last_name} (${callbackQuery.from?.username})`)
 
   // Handle removal request callbacks
   if (data && data.startsWith("removal_")) {
-    console.log("Handling removal request callback")
+    console.log("🗑️ Handling removal request callback")
     await handleTelegramCallback(callbackQuery)
     return
   }
 
   // Handle offer callbacks
   if (!data || (!data.startsWith("approve_") && !data.startsWith("reject_"))) {
-    console.log(`Invalid callback data: ${data}`)
-    await answerCallbackQuery(callbackQuery.id, "Invalid action")
+    console.log(`❌ Invalid callback data: ${data}`)
+    await answerCallbackQuery(callbackQuery.id, "❌ Invalid action")
     return
   }
 
@@ -308,7 +309,7 @@ export async function sendRemovalRequestNotification(request: RemovalRequest) {
     return
   }
 
-  const message = `🗑️ *REMOVAL REQUEST*\n\n` +
+  const message = `🗑️ *Permohonan Penghapusan*\n\n` +
     `👤 *Name:* ${request.name}\n` +
     `📱 *Phone:* ${request.phoneNumber}\n` +
     `📝 *Reason:* ${request.reason}\n` +
@@ -358,81 +359,122 @@ export async function sendRemovalRequestNotification(request: RemovalRequest) {
 // Update the existing handleTelegramCallback function to handle removal requests
 export async function handleTelegramCallback(callbackQuery: any) {
   const { data: callbackData } = callbackQuery
+  console.log(`=== CALLBACK PROCESSING START ===`)
   console.log(`Received callback: ${callbackData}`)
+  console.log(`Callback query ID: ${callbackQuery.id}`)
+  console.log(`Message ID: ${callbackQuery.message?.message_id}`)
+  console.log(`Chat ID: ${callbackQuery.message?.chat?.id}`)
 
   // Handle removal request callbacks
   if (callbackData.startsWith('removal_')) {
     const [, action, requestId] = callbackData.split('_')
     
+    console.log(`=== REMOVAL REQUEST CALLBACK ===`)
+    console.log(`Action: ${action}`)
+    console.log(`Request ID: ${requestId}`)
+    
     if (!requestId) {
-      console.error('Invalid removal callback data:', callbackData)
-      await answerCallbackQuery(callbackQuery.id, 'Invalid request ID')
+      console.error('❌ Invalid removal callback data:', callbackData)
+      await answerCallbackQuery(callbackQuery.id, '❌ Invalid request ID')
       return
     }
 
-    console.log(`Processing removal ${action} for request ${requestId}`)
+    console.log(`🔍 Processing removal ${action} for request ${requestId}`)
 
-    // Get removal request details
-    // Import here to avoid circular dependency
-    const { getRemovalRequestById } = await import("./data")
-    const request = await getRemovalRequestById(requestId)
-    if (!request) {
-      console.error(`Removal request ${requestId} not found`)
-      await answerCallbackQuery(callbackQuery.id, 'Request not found')
-      return
-    }
-
-    console.log(`Found removal request: ${request.name} - ${request.phoneNumber} (Status: ${request.status})`)
-
-    if (request.status !== "pending") {
-      console.log(`Removal request ${requestId} is not pending (current status: ${request.status})`)
-      await answerCallbackQuery(callbackQuery.id, `Request already ${request.status}`)
-      return
-    }
-
-    let success = false
-    let statusText = ""
-    let actionText = ""
-
-    if (action === "approve") {
-      console.log(`Attempting to approve removal request ${requestId}`)
-      const { approveRemovalRequest } = await import("./data")
-      success = await approveRemovalRequest(requestId)
-      statusText = "APPROVED & USER DELETED"
-      actionText = "approved and user data deleted"
-    } else if (action === "reject") {
-      console.log(`Attempting to reject removal request ${requestId}`)
-      const { rejectRemovalRequest } = await import("./data")
-      success = await rejectRemovalRequest(requestId)
-      statusText = "REJECTED"
-      actionText = "rejected"
-    }
-
-    if (success) {
-      console.log(`Removal request ${requestId} ${actionText} successfully`)
+    try {
+      // Get removal request details
+      console.log(`📋 Fetching removal request details...`)
+      const { getRemovalRequestById } = await import("./data")
+      const request = await getRemovalRequestById(requestId)
       
-      // Update the message
-      const updatedMessage = `🗑️ *REMOVAL REQUEST - ${statusText}*\n\n` +
-        `👤 *Name:* ${request.name}\n` +
-        `📱 *Phone:* ${request.phoneNumber}\n` +
-        `📝 *Reason:* ${request.reason}\n` +
-        `🕐 *Requested:* ${new Date(request.requestedAt).toLocaleString('id-ID')}\n` +
-        `✅ *Processed:* ${new Date().toLocaleString('id-ID')}\n\n` +
-        `*Status:* ${statusText}`
-
-      await editMessageText(callbackQuery.message.chat.id, callbackQuery.message.message_id, updatedMessage, null)
-      await answerCallbackQuery(callbackQuery.id, `Removal request ${actionText}!`)
-      
-      // Invalidate cache if user was deleted
-      if (action === "approve") {
-        // Import the cache invalidation function
-
+      if (!request) {
+        console.error(`❌ Removal request ${requestId} not found in database`)
+        await answerCallbackQuery(callbackQuery.id, '❌ Request not found')
+        return
       }
-    } else {
-      console.error(`Failed to ${action} removal request ${requestId}`)
-      await answerCallbackQuery(callbackQuery.id, `Failed to ${action} request`)
+
+      console.log(`✅ Found removal request:`, {
+        id: request.id,
+        name: request.name,
+        phoneNumber: request.phoneNumber,
+        status: request.status,
+        reason: request.reason
+      })
+
+      if (request.status !== "pending") {
+        console.log(`⚠️ Removal request ${requestId} is not pending (current status: ${request.status})`)
+        await answerCallbackQuery(callbackQuery.id, `⚠️ Request already ${request.status}`)
+        return
+      }
+
+      let success = false
+      let statusText = ""
+      let actionText = ""
+      let responseMessage = ""
+
+      if (action === "approve") {
+        console.log(`🔄 Attempting to approve removal request ${requestId}...`)
+        const { approveRemovalRequest } = await import("./data")
+        success = await approveRemovalRequest(requestId)
+        statusText = "APPROVED & USER DELETED"
+        actionText = "approved and user data deleted"
+        responseMessage = success ? "✅ Removal request approved and user deleted successfully!" : "❌ Failed to approve removal request"
+      } else if (action === "reject") {
+        console.log(`🔄 Attempting to reject removal request ${requestId}...`)
+        const { rejectRemovalRequest } = await import("./data")
+        success = await rejectRemovalRequest(requestId)
+        statusText = "REJECTED"
+        actionText = "rejected"
+        responseMessage = success ? "✅ Removal request rejected successfully!" : "❌ Failed to reject removal request"
+      } else {
+        console.error(`❌ Invalid action: ${action}`)
+        await answerCallbackQuery(callbackQuery.id, '❌ Invalid action')
+        return
+      }
+
+      console.log(`📊 Action result: ${success ? 'SUCCESS' : 'FAILED'}`)
+
+      if (success) {
+        console.log(`✅ Removal request ${requestId} ${actionText} successfully`)
+        
+        // Update the message
+        const updatedMessage = `🗑️ *REMOVAL REQUEST - ${statusText}*\n\n` +
+          `👤 *Name:* ${request.name}\n` +
+          `📱 *Phone:* ${request.phoneNumber}\n` +
+          `📝 *Reason:* ${request.reason}\n` +
+          `🕐 *Requested:* ${new Date(request.requestedAt).toLocaleString('id-ID')}\n` +
+          `✅ *Processed:* ${new Date().toLocaleString('id-ID')}\n\n` +
+          `*Status:* ${statusText}`
+
+        console.log(`📝 Updating Telegram message...`)
+        await editMessageText(callbackQuery.message.chat.id, callbackQuery.message.message_id, updatedMessage, null)
+        
+        console.log(`📤 Sending success callback response...`)
+        await answerCallbackQuery(callbackQuery.id, responseMessage)
+        
+        console.log(`✅ Callback processing completed successfully`)
+        
+        // Invalidate cache if user was deleted
+        if (action === "approve") {
+          console.log(`🗑️ User data deleted, cache invalidation may be needed`)
+        }
+      } else {
+        console.error(`❌ Failed to ${action} removal request ${requestId}`)
+        console.log(`📤 Sending failure callback response...`)
+        await answerCallbackQuery(callbackQuery.id, responseMessage)
+      }
+    } catch (error) {
+      console.error(`💥 Error processing removal request callback:`, error)
+      console.error(`Error details:`, {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        callbackData,
+        requestId
+      })
+      await answerCallbackQuery(callbackQuery.id, '❌ System error occurred')
     }
     
+    console.log(`=== CALLBACK PROCESSING END ===`)
     return
   }
 

@@ -129,7 +129,7 @@ export function RemovalRequestModal({ trigger }: RemovalRequestModalProps) {
             </Select>
             {formData.reason === "Lainnya" && (
               <Textarea
-                placeholder="Please specify your reason"
+                placeholder="Mohon lampirkan alasan anda"
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
                 className="mt-2"
