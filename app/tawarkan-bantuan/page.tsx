@@ -74,26 +74,30 @@ export default function TawarkanBantuanPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
-            <div className="flex items-center">
-              <Link href="/">
-                <Button variant="ghost" size="sm" className="mr-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 sm:py-6 gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center w-full sm:w-auto">
+              <Link href="/" className="mb-3 sm:mb-0">
+                <Button variant="ghost" size="sm" className="sm:mr-4">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Kembali
                 </Button>
               </Link>
-              <div className="flex items-center gap-4">
-                <img src="/bantuan-kita-logo.svg" alt="Bantuan-kita Logo" className="h-12 w-12" />
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Tawarkan Bantuan</h1>
-                  <p className="text-gray-600 mt-1">Bagikan keahlian Anda untuk membantu orang lain</p>
+              <div className="flex items-center gap-3 sm:gap-4">
+                <img src="/bantuan-kita-logo.svg" alt="Bantuan-kita Logo" className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0" />
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
+                    Tawarkan Bantuan
+                  </h1>
+                  <p className="text-sm sm:text-base text-gray-600 mt-1 leading-tight">
+                    Bagikan keahlian Anda untuk membantu orang lain
+                  </p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center w-full sm:w-auto justify-end">
               <RemovalRequestModal
                 trigger={
-                  <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
+                  <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 text-sm sm:text-base px-3 sm:px-4">
                     Hapus Akun
                   </Button>
                 }
@@ -103,19 +107,19 @@ export default function TawarkanBantuanPage() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Informasi Bantuan</CardTitle>
-            <CardDescription>
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <Card className="shadow-sm">
+          <CardHeader className="px-4 sm:px-6">
+            <CardTitle className="text-lg sm:text-xl">Informasi Bantuan</CardTitle>
+            <CardDescription className="text-sm sm:text-base leading-relaxed">
               Isi formulir di bawah ini untuk menawarkan bantuan Anda. Penawaran akan ditinjau oleh admin sebelum
               dipublikasikan.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <CardContent className="px-4 sm:px-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="name">Nama Lengkap *</Label>
+                <Label htmlFor="name" className="text-sm font-medium">Nama Lengkap *</Label>
                 <Input
                   id="name"
                   name="name"
@@ -124,11 +128,12 @@ export default function TawarkanBantuanPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="Masukkan nama lengkap Anda"
+                  className="text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Nomor WhatsApp *</Label>
+                <Label htmlFor="phoneNumber" className="text-sm font-medium">Nomor WhatsApp *</Label>
                 <Input
                   id="phoneNumber"
                   name="phoneNumber"
@@ -137,11 +142,12 @@ export default function TawarkanBantuanPage() {
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
                   placeholder="08123456789"
+                  className="text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="skill">Keahlian/Layanan *</Label>
+                <Label htmlFor="skill" className="text-sm font-medium">Keahlian/Layanan *</Label>
                 <Input
                   id="skill"
                   name="skill"
@@ -150,11 +156,12 @@ export default function TawarkanBantuanPage() {
                   value={formData.skill}
                   onChange={handleInputChange}
                   placeholder="Contoh: Desain Grafis, Les Matematika, Perbaikan Komputer"
+                  className="text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="city">Kota *</Label>
+                <Label htmlFor="city" className="text-sm font-medium">Kota *</Label>
                 <Input
                   id="city"
                   name="city"
@@ -163,11 +170,12 @@ export default function TawarkanBantuanPage() {
                   value={formData.city}
                   onChange={handleInputChange}
                   placeholder="Contoh: Jakarta, Bandung, Surabaya"
+                  className="text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="paymentRange">Kisaran Tarif (Opsional)</Label>
+                <Label htmlFor="paymentRange" className="text-sm font-medium">Kisaran Tarif (Opsional)</Label>
                 <Input
                   id="paymentRange"
                   name="paymentRange"
@@ -175,11 +183,12 @@ export default function TawarkanBantuanPage() {
                   value={formData.paymentRange}
                   onChange={handleInputChange}
                   placeholder="Contoh: IDR 100.000-200.000/jam"
+                  className="text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Deskripsi Layanan *</Label>
+                <Label htmlFor="description" className="text-sm font-medium">Deskripsi Layanan *</Label>
                 <Textarea
                   id="description"
                   name="description"
@@ -187,11 +196,16 @@ export default function TawarkanBantuanPage() {
                   value={formData.description}
                   onChange={handleInputChange}
                   placeholder="Jelaskan secara detail layanan yang Anda tawarkan, pengalaman, dan hal-hal penting lainnya"
-                  rows={5}
+                  rows={4}
+                  className="text-base resize-none"
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+              <Button 
+                type="submit" 
+                className="w-full bg-blue-600 hover:bg-blue-700 h-11 sm:h-10 text-base font-medium" 
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? (
                   "Mengirim..."
                 ) : (
