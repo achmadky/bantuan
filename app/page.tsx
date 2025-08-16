@@ -281,9 +281,10 @@ export default function HomePage() {
 
                   <p className="text-gray-700 text-sm leading-relaxed mb-3 line-clamp-3">{offer.description}</p>
 
-                  <div className="flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2">
-                    <div className="text-xs text-gray-500 order-2 xs:order-1">
-                      {new Date(offer.createdAt).toLocaleDateString("id-ID")}
+                  <div className="flex flex-col xs:flex-row xs:justify-between xs:items-center gap-3">
+                    <div className="text-xs text-gray-500 order-2 xs:order-1 flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                      Tersedia • {new Date(offer.createdAt).toLocaleDateString("id-ID")}
                     </div>
                     <div className="order-1 xs:order-2">
                       <WhatsAppButton name={offer.name} skill={offer.skill} phoneNumber={offer.phoneNumber} />
