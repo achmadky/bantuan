@@ -9,7 +9,6 @@ import { MapPin, User, Briefcase, Plus, MessageCircle, Search, Filter, ChevronLe
 import Link from "next/link"
 
 interface Offer {
-  // id: string - Remove this since we won't receive IDs from the API anymore
   name: string
   skill: string
   city: string
@@ -78,14 +77,12 @@ export default function HomePage() {
   })
   const [searchLoading, setSearchLoading] = useState(false)
 
-  // Debounce search to avoid too many API calls
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     fetchOffers(1, searchBantuan, searchCity)
   }, [])
 
-  // Handle search with debounce
   useEffect(() => {
     if (searchTimeout) {
       clearTimeout(searchTimeout)
@@ -94,7 +91,7 @@ export default function HomePage() {
     const timeout = setTimeout(() => {
       setCurrentPage(1)
       fetchOffers(1, searchBantuan, searchCity)
-    }, 500) // 500ms debounce
+    }, 500)
 
     setSearchTimeout(timeout)
 
@@ -141,10 +138,10 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat bantuan tersedia...</p>
+          <p className="text-gray-600 text-sm sm:text-base">Memuat bantuan tersedia...</p>
         </div>
       </div>
     )
@@ -153,19 +150,19 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <img src="/bantuan-kita-logo.svg" alt="Bantuan-kita Logo" className="h-16 w-16" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Bantuan-kita</h1>
-                <p className="text-gray-600 text-sm">Temukan bantuan yang Anda butuhkan</p>
+        <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+              <img src="/bantuan-kita-logo.svg" alt="Bantuan-kita Logo" className="h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">Bantuan-kita</h1>
+                <p className="text-gray-600 text-xs sm:text-sm leading-tight">Temukan bantuan yang Anda butuhkan</p>
               </div>
             </div>
-            <Link href="/tawarkan-bantuan">
-              <Button className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
+            <Link href="/tawarkan-bantuan" className="w-full sm:w-auto">
+              <Button className="bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2 w-full sm:w-auto text-sm px-4 py-2">
                 <Plus size={16} />
-                Tawarkan Bantuan
+                <span>Tawarkan Bantuan</span>
               </Button>
             </Link>
           </div>
@@ -175,13 +172,13 @@ export default function HomePage() {
       {/* Filter Section */}
       <div className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
               <Filter size={16} className="text-gray-500" />
               <span className="text-sm font-medium text-gray-700">Filter:</span>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 flex-1">
+            <div className="flex flex-col sm:flex-row gap-3">
               {/* Search Bantuan */}
               <div className="relative flex-1">
                 <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -189,7 +186,7 @@ export default function HomePage() {
                   placeholder="Cari bantuan..."
                   value={searchBantuan}
                   onChange={(e) => setSearchBantuan(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 text-base"
                   disabled={searchLoading}
                 />
               </div>
@@ -201,14 +198,19 @@ export default function HomePage() {
                   placeholder="Cari kota..."
                   value={searchCity}
                   onChange={(e) => setSearchCity(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 text-base"
                   disabled={searchLoading}
                 />
               </div>
 
               {/* Clear Filters */}
               {(searchBantuan || searchCity) && (
-                <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap bg-transparent" disabled={searchLoading}>
+                <Button 
+                  variant="outline" 
+                  onClick={clearFilters} 
+                  className="whitespace-nowrap bg-transparent w-full sm:w-auto" 
+                  disabled={searchLoading}
+                >
                   Reset Filter
                 </Button>
               )}
@@ -216,7 +218,7 @@ export default function HomePage() {
           </div>
 
           {/* Results count */}
-          <div className="mt-3 text-sm text-gray-600">
+          <div className="mt-3 text-xs sm:text-sm text-gray-600">
             {searchLoading ? (
               <span className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -231,10 +233,10 @@ export default function HomePage() {
         </div>
       </div>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-4 py-4 sm:py-6">
         {offers.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-gray-500 text-sm sm:text-base">
               {pagination.total === 0
                 ? "Belum ada bantuan yang tersedia"
                 : "Tidak ada bantuan yang sesuai dengan filter Anda"}
@@ -246,42 +248,46 @@ export default function HomePage() {
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            {offers.map((offer) => (
-              <Card className="hover:shadow-md transition-shadow">
+          <div className="space-y-3 sm:space-y-4">
+            {offers.map((offer, index) => (
+              <Card key={index} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-3">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
                     <div className="flex items-center gap-2">
-                      <User size={18} className="text-blue-600" />
-                      <h3 className="font-semibold text-gray-900">{offer.name}</h3>
+                      <User size={18} className="text-blue-600 flex-shrink-0" />
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base leading-tight">{offer.name}</h3>
                     </div>
                   </div>
 
                   <div className="space-y-2 mb-3">
                     <div className="flex items-center gap-2">
-                      <Briefcase size={14} className="text-gray-500" />
-                      <span className="text-sm text-gray-900">{offer.skill}</span>
+                      <Briefcase size={14} className="text-gray-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-900 leading-tight">{offer.skill}</span>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-4">
                       <div className="flex items-center gap-1">
-                        <MapPin size={14} className="text-gray-500" />
+                        <MapPin size={14} className="text-gray-500 flex-shrink-0" />
                         <span className="text-sm text-gray-600">{offer.city}</span>
                       </div>
 
                       {offer.paymentRange && (
-                        <Badge variant="secondary" className="text-xs">
-                          Rp {(offer.paymentRange)}
+                        <Badge variant="secondary" className="text-xs w-fit">
+                          Rp {offer.paymentRange}
                         </Badge>
                       )}
                     </div>
                   </div>
 
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">{offer.description}</p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3 line-clamp-3">{offer.description}</p>
 
-                  <div className="flex justify-between items-center">
-                    <div className="text-xs text-gray-500">{new Date(offer.createdAt).toLocaleDateString("id-ID")}</div>
-                    <WhatsAppButton name={offer.name} skill={offer.skill} phoneNumber={offer.phoneNumber} />
+                  <div className="flex justify-between items-center gap-2">
+                    <div className="text-xs text-gray-500">
+                      {new Date(offer.createdAt).toLocaleDateString("id-ID")}
+                    </div>
+                    <div className="flex-shrink-0">
+                      <WhatsAppButton name={offer.name} skill={offer.skill} phoneNumber={offer.phoneNumber} />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -291,42 +297,60 @@ export default function HomePage() {
         
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="mt-8">
+          <div className="mt-6 sm:mt-8">
             <nav className="flex justify-center">
-              <ul className="flex space-x-2">
+              <ul className="flex flex-wrap justify-center gap-1 sm:gap-2">
                 {pagination.hasPrev && (
                   <li>
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
-                      className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center gap-1"
+                      className="px-2 sm:px-3 py-1 sm:py-2 rounded border border-gray-300 hover:bg-gray-50 flex items-center gap-1 text-sm"
                       disabled={searchLoading}
                     >
                       <ChevronLeft className="h-4 w-4" />
-                      <span>Previous</span>
+                      <span className="hidden sm:inline">Previous</span>
+                      <span className="sm:hidden">Prev</span>
                     </button>
                   </li>
                 )}
                 
-                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((number) => (
-                  <li key={number}>
-                    <button
-                      onClick={() => handlePageChange(number)}
-                      className={`px-3 py-1 rounded ${currentPage === number ? 'bg-blue-600 text-white' : 'border border-gray-300 hover:bg-gray-50'}`}
-                      disabled={searchLoading}
-                    >
-                      {number}
-                    </button>
-                  </li>
-                ))}
+                {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => {
+                  let pageNumber;
+                  if (pagination.totalPages <= 5) {
+                    pageNumber = i + 1;
+                  } else {
+                    const start = Math.max(1, currentPage - 2);
+                    const end = Math.min(pagination.totalPages, start + 4);
+                    pageNumber = start + i;
+                    if (pageNumber > end) return null;
+                  }
+                  
+                  return (
+                    <li key={pageNumber}>
+                      <button
+                        onClick={() => handlePageChange(pageNumber)}
+                        className={`px-2 sm:px-3 py-1 sm:py-2 rounded text-sm ${
+                          currentPage === pageNumber 
+                            ? 'bg-blue-600 text-white' 
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                        disabled={searchLoading}
+                      >
+                        {pageNumber}
+                      </button>
+                    </li>
+                  );
+                })}
                 
                 {pagination.hasNext && (
                   <li>
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
-                      className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 flex items-center gap-1"
+                      className="px-2 sm:px-3 py-1 sm:py-2 rounded border border-gray-300 hover:bg-gray-50 flex items-center gap-1 text-sm"
                       disabled={searchLoading}
                     >
-                      <span>Next</span>
+                      <span className="hidden sm:inline">Next</span>
+                      <span className="sm:hidden">Next</span>
                       <ChevronRight className="h-4 w-4" />
                     </button>
                   </li>
