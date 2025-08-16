@@ -370,10 +370,19 @@ export async function handleTelegramCallback(callbackQuery: any) {
 
   // Handle removal request callbacks
   if (callbackData.startsWith('removal_')) {
-    // const [, action, requestId] = callbackData.split('_') FIX THIS LOGIC DUE OUR ID USING _, IT WOULD SPLIT ALL OF THEM
-    const firstUnderscore = callbackData.indexOf('_'); //SIMPLE LOGIC FOR NOT LEAVING THE REST
-    const action = callbackData.slice(0, firstUnderscore);
-    const requestId = callbackData.slice(firstUnderscore + 1);
+    // Find the first underscore after 'removal_'
+    const firstUnderscoreIndex = callbackData.indexOf('_');
+    // Find the second underscore which separates action from requestId
+    const secondUnderscoreIndex = callbackData.indexOf('_', firstUnderscoreIndex + 1);
+    
+    if (secondUnderscoreIndex === -1) {
+      console.error('Invalid callback data format:', callbackData);
+      return;
+    }
+    
+    // Extract action (approve/reject) and the full requestId
+    const action = callbackData.slice(firstUnderscoreIndex + 1, secondUnderscoreIndex);
+    const requestId = callbackData.slice(secondUnderscoreIndex + 1);
 
     
     console.log(`=== REMOVAL REQUEST CALLBACK ===`)
